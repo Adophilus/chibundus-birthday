@@ -46,7 +46,7 @@ const DiscordTaskTab: FunctionComponent = () => {
             Verify on Discord
           </span>
         </span>
-        <span className="flex text-white font-semibold text-lg self-stretch items-center px-4 bg-teal-400">
+        <span className="flex w-16 text-white font-semibold text-lg self-stretch items-center justify-center bg-teal-400">
           {sessionData?.user ? <Check className="w-6 h-6 stroke-[3]" /> : "+10"}
         </span>
       </button>
@@ -60,26 +60,44 @@ const TwitterTaskTab: FunctionComponent = () => {
   if (!sessionData?.user) return null
 
   return (
-    <div className="flex w-full border-y-white border-y">
-      <button
-        type="button"
-        className="flex w-full justify-between items-center"
-        onClick={() => {
-          if (!sessionData?.user) signIn("twitter")
-        }}
-      >
-        <span className="flex gap-x-2 items-center">
-          <span className="flex bg-[#1DA1F2] p-2">
-            <TwitterIcon className="w-8 h-8 fill-white stroke-white stroke-[0.5]" />
+    <div className="flex flex-col w-full border-y-white border-y">
+      <div>
+        <button
+          type="button"
+          className="flex w-full justify-between items-center"
+        >
+          <span className="flex gap-x-2 items-center">
+            <span className="flex bg-[#1DA1F2] p-2">
+              <TwitterIcon className="w-8 h-8 fill-white stroke-white stroke-[0.5]" />
+            </span>
+            <span className="text-white font-semibold text-lg">
+              Follow @adophilus on Twitter
+            </span>
           </span>
-          <span className="text-white font-semibold text-lg">
-            Verify on Twitter
-          </span>
-        </span>
-        <span className="flex text-white font-semibold text-lg self-stretch items-center px-4 bg-teal-400">
-          {sessionData?.user ? <Check className="w-6 h-6 stroke-[3]" /> : "+10"}
-        </span>
-      </button>
+          <button
+            type="button"
+            onClick={() => window.open("https://twitter.com/adophilus")}
+            className="flex w-16 text-white font-semibold text-lg self-stretch items-center justify-center bg-teal-400"
+          >
+            +10
+          </button>
+        </button>
+      </div>
+      <div className="p-4 border-t-2 border-white">
+        <form className="relative flex" onSubmit={(e) => e.preventDefault()}>
+          <input
+            type="text"
+            placeholder="twitter @username"
+            className="grow rounded-l-md px-2 py-1 text-white font-monspace bg-transparent border-2 border-white border-r-0"
+          />
+          <button
+            type="button"
+            className="flex rounded-r-md text-white text-lg items-center justify-center px-2 hover:bg-white hover:text-black transition duration-300 ease-in-out border-2 border-white border-l-0"
+          >
+            <Check className="w-6 h-6 stroke-[3]" />
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
