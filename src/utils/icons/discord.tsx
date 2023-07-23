@@ -1,4 +1,4 @@
-import { FunctionComponent } from "react"
+import type { FunctionComponent } from "react"
 
 const DiscordIcon: FunctionComponent<{ className: string }> = ({ className }) => {
   return (
