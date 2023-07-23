@@ -18,7 +18,7 @@ export default {
         "sans-serif"
       ],
       roboto: ["Roboto", "sans-serif"],
-        robotoMono: ["Roboto Mono", "monospace"]
+      robotoMono: ["Roboto Mono", "monospace"]
     },
     container: {
       center: true,
