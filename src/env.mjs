@@ -24,7 +24,8 @@ export const env = createEnv({
     DISCORD_CLIENT_ID: z.string(),
     DISCORD_CLIENT_SECRET: z.string(),
     TWITTER_CLIENT_ID: z.string(),
-    TWITTER_CLIENT_SECRET: z.string()
+    TWITTER_CLIENT_SECRET: z.string(),
+    TWITTER_BEARER_TOKEN: z.string()
   },
 
   /**
@@ -49,6 +50,7 @@ export const env = createEnv({
     DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
     TWITTER_CLIENT_ID: process.env.TWITTER_CLIENT_ID,
     TWITTER_CLIENT_SECRET: process.env.TWITTER_CLIENT_SECRET,
+    TWITTER_BEARER_TOKEN: process.env.TWITTER_BEARER_TOKEN
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
