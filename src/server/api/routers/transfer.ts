@@ -1,17 +1,23 @@
+import { Client } from "twitter-api-sdk";
 import { z } from "zod";
+import { env } from "~/env.mjs";
 import {
   createTRPCRouter,
   publicProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
 
-export const exampleRouter = createTRPCRouter({
+export const transferRouter = createTRPCRouter({
   hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input.text}`,
-      };
+    .query(async ({ ctx }) => {
+      try {
+        // console.log(ctx.session);
+        return { message: "success" };
+      }
+      catch (err) {
+        console.log(err)
+        return { error: "something bad happened" }
+      }
     }),
 
   getAll: publicProcedure.query(({ ctx }) => {
