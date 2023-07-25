@@ -1,18 +1,20 @@
-import { Button } from "@/components/ui/button"
-import { signIn, signOut, useSession } from "next-auth/react"
-import { api } from "~/utils/api"
-import DiscordIcon from "~/utils/icons/discord"
-import { Check, TwitterIcon, XOctagon } from "lucide-react"
-import type { FunctionComponent } from "react"
-import MaticIcon from "~/utils/icons/matic"
-import { Disclosure, Transition } from '@headlessui/react'
-import { useQuery } from "@tanstack/react-query"
-import { env } from "~/env.mjs"
+import { Button } from "@/components/ui/button";
+import { signIn, signOut, useSession } from "next-auth/react";
+import { api } from "~/utils/api";
+import DiscordIcon from "~/utils/icons/discord";
+import { Check, Lock, TwitterIcon, XOctagon } from "lucide-react";
+import { FunctionComponent, useEffect, useRef } from "react";
+import MaticIcon from "~/utils/icons/matic";
+import { Disclosure, Transition } from "@headlessui/react";
+import toast from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
+import { env } from "~/env.mjs";
+import useAppStore from "~/utils/store";
 
 const Navbar: FunctionComponent = () => {
-  const { data: sessionData } = useSession()
+  const { data: sessionData } = useSession();
 
-  if (sessionData?.user)
+  if (sessionData?.user) {
     return (
       <div className="border-b-2 border-white flex justify-end">
         <Button
@@ -23,13 +25,14 @@ const Navbar: FunctionComponent = () => {
           Sign Out
         </Button>
       </div>
-    )
+    );
+  }
 
-  return null
-}
+  return null;
+};
 
 const DiscordTaskTab: FunctionComponent = () => {
-  const { data: sessionData } = useSession()
+  const { data: sessionData } = useSession();
 
   return (
     <div className="flex w-full border-y-white border-y">
@@ -37,7 +40,7 @@ const DiscordTaskTab: FunctionComponent = () => {
         type="button"
         className="flex w-full justify-between items-center"
         onClick={() => {
-          if (!sessionData?.user) signIn("discord")
+          if (!sessionData?.user) signIn("discord");
         }}
       >
         <span className="flex gap-x-2 items-center">
@@ -53,13 +56,21 @@ const DiscordTaskTab: FunctionComponent = () => {
         </span>
       </button>
     </div>
-  )
-}
+  );
+};
 
 const DiscordServerTaskTab: FunctionComponent = () => {
-  const { data: sessionData } = useSession()
-  const hasJoinedServer = false
-  api.transfer.hello.useQuery()
+  const { data: sessionData } = useSession();
+  const isLoggedIn = sessionData?.user;
+
+  const store = useAppStore((store) => store);
+
+  const { error, isLoading, refetch } = api.transfer.checkDiscord.useQuery();
+  const updateHasJoinedDiscord = () => {
+    if (!isLoading && !error)
+      store.updateHasJoinedDiscord(true);
+  }
+  useEffect(updateHasJoinedDiscord, [isLoading, error, store])
 
   return (
     <div className="flex w-full border-y-white border-y">
@@ -67,7 +78,8 @@ const DiscordServerTaskTab: FunctionComponent = () => {
         type="button"
         className="flex w-full justify-between items-center"
         onClick={() => {
-          if (!sessionData?.user) signIn("discord")
+          window.open(env.NEXT_PUBLIC_DISCORD_SERVER_URL)
+          setTimeout(updateHasJoinedDiscord, 1000)
         }}
       >
         <span className="flex gap-x-2 items-center">
@@ -78,20 +90,49 @@ const DiscordServerTaskTab: FunctionComponent = () => {
             Join our Discord server
           </span>
         </span>
-        <button
-          type="button"
-          onClick={() => window.open(env.NEXT_PUBLIC_DISCORD_SERVER_URL)}
+        <span
           className="flex w-16 text-white font-semibold text-lg self-stretch items-center justify-center bg-teal-400"
         >
-          {hasJoinedServer ? <Check className="w-6 h-6 stroke-[3]" /> : "+10"}
-        </button>
+          {isLoggedIn
+            ? (
+              store.hasJoinedDiscord
+                ? <Check className="w-6 h-6 stroke-[3]" />
+                : (
+                  "+10"
+                )
+            )
+            : <Lock className="w-6 h-6 stroke-[3]" />}
+        </span>
       </button>
     </div>
-  )
-}
+  );
+};
 
 const PolygonWalletAddressTaskTab: FunctionComponent = () => {
-  const { data: sessionData } = useSession()
+  const { data: sessionData } = useSession();
+  const isLoggedIn = sessionData?.user;
+
+  const walletAddress = useRef<HTMLInputElement>(null);
+  const store = useAppStore((store) => store);
+
+  const { mutate: sendMaticMutation } = api.transfer.sendMatic.useMutation();
+  const sendMatic = (address: string) => {
+    sendMaticMutation(
+      { recipientAddress: address },
+      {
+        onError(err) {
+          toast.error(err.message);
+        },
+        onSuccess(res) {
+          store.updateHasSentFunds(true);
+          toast.success(res.message);
+        },
+      },
+    );
+  };
+
+  if (!isLoggedIn || !store.hasJoinedDiscord || store.hasSentFunds)
+    return null
 
   return (
     <div className="flex flex-col w-full border-y-white border-y">
@@ -99,8 +140,7 @@ const PolygonWalletAddressTaskTab: FunctionComponent = () => {
         {({ open }) => (
           <>
             <Disclosure.Button className="flex w-full">
-              <div
-                className="flex w-full justify-between items-center" >
+              <div className="flex w-full justify-between items-center">
                 <span className="flex gap-x-2 items-center">
                   <span className="flex bg-[#6F41D8] items-center justify-center w-14 h-14">
                     <MaticIcon className="w-8 h-8 fill-white stroke-white" />
@@ -109,10 +149,16 @@ const PolygonWalletAddressTaskTab: FunctionComponent = () => {
                     Enter in polygon wallet address
                   </span>
                 </span>
-                <span
-                  className="flex w-16 text-white font-semibold text-lg self-stretch items-center justify-center bg-teal-400"
-                >
-                  +10
+                <span className="flex w-16 text-white font-semibold text-lg self-stretch items-center justify-center bg-teal-400">
+                  {isLoggedIn
+                    ? (
+                      store.hasSentFunds
+                        ? <Check className="w-6 h-6 stroke-[3]" />
+                        : (
+                          "+10"
+                        )
+                    )
+                    : <Lock className="w-6 h-6 stroke-[3]" />}
                 </span>
               </div>
             </Disclosure.Button>
@@ -127,10 +173,19 @@ const PolygonWalletAddressTaskTab: FunctionComponent = () => {
             >
               <Disclosure.Panel>
                 <div className="p-4 border-t-2 border-white">
-                  <form className="relative flex" onSubmit={(e) => e.preventDefault()}>
+                  <form
+                    className="relative flex"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (walletAddress.current) {
+                        sendMatic(walletAddress.current.value);
+                      }
+                    }}
+                  >
                     <input
                       type="text"
                       placeholder="Polygon wallet address"
+                      ref={walletAddress}
                       className="grow rounded-l-md px-2 py-1 text-white font-robotoMono bg-transparent border-2 border-white border-r-0"
                     />
                     <button
@@ -147,71 +202,72 @@ const PolygonWalletAddressTaskTab: FunctionComponent = () => {
         )}
       </Disclosure>
     </div>
-  )
-}
+  );
+};
 
 const TasksTabs: FunctionComponent = () => {
-  const { data: sessionData } = useSession()
-
-  // if (!sessionData?.user) return null
-
   return (
     <>
       <DiscordTaskTab />
       <DiscordServerTaskTab />
       <PolygonWalletAddressTaskTab />
     </>
-  )
-}
+  );
+};
 
 const Heading: FunctionComponent = () => {
-  const { data: sessionData } = useSession()
+  const { data: sessionData } = useSession();
 
-  if (sessionData?.user)
+  if (sessionData?.user) {
     return (
       <header className="flex justify-center">
         <h1 className="text-3xl text-white font-press-start whitespace-nowrap">
           Happy Birthday!!!
         </h1>
       </header>
-    )
+    );
+  }
 
   return (
     <header className="flex flex-col items-center gap-2">
       <div>
         <XOctagon className="w-24 h-24 text-white" />
       </div>
-      <h2 className="font-roboto text-white text-4xl">HALT!</h2>
+      <h2 className="font-roboto text-white text-4xl">Verification Required!</h2>
     </header>
-  )
-}
+  );
+};
 
 const IntroText: FunctionComponent = () => {
-  const { data: sessionData } = useSession()
+  const { data: sessionData } = useSession();
+  const isLoggedIn = sessionData?.user;
 
-  // if (sessionData?.user)
+  if (!isLoggedIn)
+    return (
+      <div className="px-4">
+        <p>
+          <Button
+            variant="ghost"
+            className="text-white border-white border-2 w-full"
+            onClick={() => signIn("discord")}
+          >
+            Please Sign In First
+          </Button>
+        </p>
+      </div>
+    );
+
   return (
     <p className="px-4 text-white text-center text-lg">
       Complete the tasks to collect your reward
     </p>
-  )
-
-  return (
-    <div className="px-4">
-      <p>
-        <Button
-          variant="ghost"
-          className="text-white border-white border-2 w-full"
-          onClick={() => signIn("discord")}
-        >
-          Please Sign In First
-        </Button>
-      </p>
-    </div>
-  )
-}
+  );
+};
 
 export default function Home() {
+  const { data: sessionData } = useSession();
+  const isLoggedIn = sessionData?.user;
+
   return (
     <main className="h-full mx-auto overflow-hidden sm:w-10/12 lg:w-1/2 sm:border-x-white sm:border-x-2">
       <section>
@@ -223,9 +279,11 @@ export default function Home() {
       <section className="py-4">
         <IntroText />
       </section>
-      <section>
-        <TasksTabs />
-      </section>
+      {isLoggedIn ? (
+        <section>
+          <TasksTabs />
+        </section>
+      ) : null}
     </main>
-  )
+  );
 }
