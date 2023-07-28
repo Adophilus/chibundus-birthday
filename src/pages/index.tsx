@@ -21,7 +21,10 @@ const Navbar: FunctionComponent = () => {
         <Button
           variant="ghost"
           className="text-white rounded-none"
-          onClick={() => signOut().catch(err => console.warn("[signout]", err))}
+          onClick={() => {
+            signOut()
+              .catch(err => console.warn("[signout]", err))
+          }}
         >
           <LogOut className="w-6 h-6 mr-2" />
           Sign Out
@@ -42,7 +45,8 @@ const DiscordTaskTab: FunctionComponent = () => {
         type="button"
         className="flex w-full justify-between items-center"
         onClick={() => {
-          if (!sessionData?.user) signIn("discord");
+          if (!sessionData?.user) signIn("discord")
+            .catch(err => console.warn("[signin]", err))
         }}
       >
         <span className="flex gap-x-2 items-center">
@@ -253,7 +257,10 @@ const IntroText: FunctionComponent = () => {
           <Button
             variant="ghost"
             className="text-white border-white border-2 w-full"
-            onClick={() => signIn("discord")}
+            onClick={() => {
+              signIn("discord")
+                .catch(err => console.warn("[signin]", err))
+            }}
           >
             Please Sign In First
           </Button>
