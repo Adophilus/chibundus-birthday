@@ -4,19 +4,17 @@ import { parseEther } from "ethers"
 import { z } from "zod"
 import { env } from "~/env.mjs"
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc"
-import { sendMatic, wallet } from "~/utils/web3"
+import { wallet } from "~/utils/web3"
 
 const sendBirthdayMessage = async () => {
   try {
-    const res = await axios.get(
-      `https://discord.com/api/v10/guilds/${env.DISCORD_SERVER_ID}/members`,
+    await axios.post(
+      env.DISCORD_SERVER_WEBHOOK_URL,
       {
         headers: {
           Authorization: `Bot ${env.DISCORD_BEARER_TOKEN}`
         }
       })
-    console.log(res.data)
-    return res.data
   } catch (err) {
     if (axios.isAxiosError(err)) {
       if (!err.response)
@@ -79,6 +77,9 @@ export const transferRouter = createTRPCRouter({
         console.log(
           `[DB][${name}][${amount}][${recipientAddress}] Added tx to db`
         )
+        try {
+          await sendBirthdayMessage()
+        } catch (err) { }
         return { status: true, message: "Check your wallet 😉" }
       } catch (error) {
         console.log(error)
@@ -90,7 +91,6 @@ export const transferRouter = createTRPCRouter({
     if (!ctx.session)
       throw new TRPCError({ message: "User not logged in!", code: "UNAUTHORIZED" })
 
-    console.log(ctx.session.user.id)
     const account = await ctx.prisma.account.findFirst({
       where: {
         userId: ctx.session.user.id
@@ -114,8 +114,12 @@ export const transferRouter = createTRPCRouter({
             Authorization: `Bot ${env.DISCORD_BEARER_TOKEN}`
           }
         })
-      if (!res.data.map(member => member.user.id).includes(account.providerAccountId))
-        throw new TRPCError({ message: "Please join the discord server", code: "BAD_REQUEST" })
+      if (!res.data.map(member => member.user.id).includes(account.providerAccountId)) {
+        return false
+      }
+      else {
+        return true
+      }
     } catch (err) {
       if (axios.isAxiosError(err)) {
         if (!err.response)
