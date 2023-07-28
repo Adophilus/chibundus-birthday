@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <title>Chibundu's Birthday</title>
+        <title>NovaRetro</title>
         <meta name="description" content="Chibundu's birthday" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
