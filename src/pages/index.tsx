@@ -3,7 +3,8 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { api } from "~/utils/api";
 import DiscordIcon from "~/utils/icons/discord";
 import { Check, Lock, LogOut, XOctagon } from "lucide-react";
-import { FunctionComponent, useEffect, useRef } from "react";
+import type { FunctionComponent } from "react";
+import { useEffect, useRef } from "react";
 import MaticIcon from "~/utils/icons/matic";
 import { Disclosure, Transition } from "@headlessui/react";
 import toast from "react-hot-toast";
@@ -20,7 +21,7 @@ const Navbar: FunctionComponent = () => {
         <Button
           variant="ghost"
           className="text-white rounded-none"
-          onClick={() => signOut()}
+          onClick={() => signOut().catch(err => console.warn("[signout]", err))}
         >
           <LogOut className="w-6 h-6 mr-2" />
           Sign Out
@@ -66,9 +67,8 @@ const DiscordServerTaskTab: FunctionComponent = () => {
 
   const store = useAppStore((store) => store);
 
-  const { data, error, isLoading } = api.transfer.checkDiscord.useQuery();
+  const { data } = api.transfer.checkDiscord.useQuery();
   const updateHasJoinedDiscord = () => {
-    console.log(data);
     if (data) store.updateHasJoinedDiscord(true);
   };
   useEffect(updateHasJoinedDiscord, [data, store]);
