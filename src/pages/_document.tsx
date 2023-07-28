@@ -1,13 +1,8 @@
-import { Html, Head, Main, NextScript } from 'next/document'
+import { Html, Main, NextScript } from 'next/document'
 
 export default function Document() {
   return (
     <Html lang="en">
-      <Head>
-        <title>NovaRetro</title>
-        <meta name="description" content="Chibundu's birthday" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
       <body
         className="flex min-h-screen"
         style={{
