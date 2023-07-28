@@ -2,12 +2,11 @@ import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { api } from "~/utils/api";
 import DiscordIcon from "~/utils/icons/discord";
-import { Check, Lock, TwitterIcon, XOctagon } from "lucide-react";
+import { Check, Lock, LogOut, XOctagon } from "lucide-react";
 import { FunctionComponent, useEffect, useRef } from "react";
 import MaticIcon from "~/utils/icons/matic";
 import { Disclosure, Transition } from "@headlessui/react";
 import toast from "react-hot-toast";
-import { useQuery } from "@tanstack/react-query";
 import { env } from "~/env.mjs";
 import useAppStore from "~/utils/store";
 
@@ -22,6 +21,7 @@ const Navbar: FunctionComponent = () => {
           className="text-white rounded-none"
           onClick={() => signOut()}
         >
+          <LogOut className="w-6 h-6 mr-2" />
           Sign Out
         </Button>
       </div>
@@ -47,7 +47,7 @@ const DiscordTaskTab: FunctionComponent = () => {
           <span className="flex bg-[#7289da] w-14 h-14 items-center justify-center">
             <DiscordIcon className="w-12 h-12 fill-white stroke-white stroke-[0.5]" />
           </span>
-          <span className="text-white font-semibold text-lg">
+          <span className="text-white font-semibold text-sm sm:text-lg">
             Verify Discord
           </span>
         </span>
@@ -65,12 +65,13 @@ const DiscordServerTaskTab: FunctionComponent = () => {
 
   const store = useAppStore((store) => store);
 
-  const { error, isLoading, refetch } = api.transfer.checkDiscord.useQuery();
+  const { data, error, isLoading } = api.transfer.checkDiscord.useQuery();
   const updateHasJoinedDiscord = () => {
-    if (!isLoading && !error)
+    console.log(data)
+    if (data)
       store.updateHasJoinedDiscord(true);
   }
-  useEffect(updateHasJoinedDiscord, [isLoading, error, store])
+  useEffect(updateHasJoinedDiscord, [data, store])
 
   return (
     <div className="flex w-full border-y-white border-y">
@@ -86,7 +87,7 @@ const DiscordServerTaskTab: FunctionComponent = () => {
           <span className="flex bg-[#7289da] w-14 h-14 items-center justify-center">
             <DiscordIcon className="w-12 h-12 fill-white stroke-white stroke-[0.5]" />
           </span>
-          <span className="text-white font-semibold text-lg">
+          <span className="text-white font-semibold text-sm sm:text-lg">
             Join our Discord server
           </span>
         </span>
@@ -142,10 +143,10 @@ const PolygonWalletAddressTaskTab: FunctionComponent = () => {
             <Disclosure.Button className="flex w-full">
               <div className="flex w-full justify-between items-center">
                 <span className="flex gap-x-2 items-center">
-                  <span className="flex bg-[#6F41D8] items-center justify-center w-14 h-14">
-                    <MaticIcon className="w-8 h-8 fill-white stroke-white" />
+                  <span className="flex bg-[#6F41D8] items-center justify-center w-14 h-14 self-stretch">
+                    <MaticIcon className="w-8 h-8 fill-white stroke-white stroke-[0.5]" />
                   </span>
-                  <span className="text-white font-semibold text-lg">
+                  <span className="text-white font-semibold text-sm sm:text-lg">
                     Enter in polygon wallet address
                   </span>
                 </span>
@@ -162,42 +163,44 @@ const PolygonWalletAddressTaskTab: FunctionComponent = () => {
                 </span>
               </div>
             </Disclosure.Button>
-            <Transition
-              show={open}
-              enter="transition duration-100 ease-out"
-              enterFrom="transform scale-95 opacity-0"
-              enterTo="transform scale-100 opacity-100"
-              leave="transition duration-75 ease-out"
-              leaveFrom="transform scale-100 opacity-100"
-              leaveTo="transform scale-95 opacity-0"
-            >
-              <Disclosure.Panel>
-                <div className="p-4 border-t-2 border-white">
-                  <form
-                    className="relative flex"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (walletAddress.current) {
-                        sendMatic(walletAddress.current.value);
-                      }
-                    }}
-                  >
-                    <input
-                      type="text"
-                      placeholder="Polygon wallet address"
-                      ref={walletAddress}
-                      className="grow rounded-l-md px-2 py-1 text-white font-robotoMono bg-transparent border-2 border-white border-r-0"
-                    />
-                    <button
-                      type="button"
-                      className="flex rounded-r-md text-white text-lg items-center justify-center px-2 hover:bg-white hover:text-black transition duration-300 ease-in-out border-2 border-white border-l-0"
+            {store.hasSentFunds ? (
+              <Transition
+                show={open}
+                enter="transition duration-100 ease-out"
+                enterFrom="transform scale-95 opacity-0"
+                enterTo="transform scale-100 opacity-100"
+                leave="transition duration-75 ease-out"
+                leaveFrom="transform scale-100 opacity-100"
+                leaveTo="transform scale-95 opacity-0"
+              >
+                <Disclosure.Panel>
+                  <div className="p-4 border-t-2 border-white">
+                    <form
+                      className="relative flex"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (walletAddress.current) {
+                          sendMatic(walletAddress.current.value);
+                        }
+                      }}
                     >
-                      <Check className="w-6 h-6 stroke-[3]" />
-                    </button>
-                  </form>
-                </div>
-              </Disclosure.Panel>
-            </Transition>
+                      <input
+                        type="text"
+                        placeholder="Polygon wallet address"
+                        ref={walletAddress}
+                        className="grow rounded-l-md px-2 py-1 text-white font-robotoMono bg-transparent border-2 border-white border-r-0"
+                      />
+                      <button
+                        type="button"
+                        className="flex rounded-r-md text-white text-lg items-center justify-center px-2 hover:bg-white hover:text-black transition duration-300 ease-in-out border-2 border-white border-l-0"
+                      >
+                        <Check className="w-6 h-6 stroke-[3]" />
+                      </button>
+                    </form>
+                  </div>
+                </Disclosure.Panel>
+              </Transition>
+            ) : null}
           </>
         )}
       </Disclosure>
@@ -222,7 +225,7 @@ const Heading: FunctionComponent = () => {
     return (
       <header className="flex justify-center">
         <h1 className="text-3xl text-white font-press-start whitespace-nowrap">
-          Happy Birthday!!!
+          NovaRetro
         </h1>
       </header>
     );
@@ -258,9 +261,14 @@ const IntroText: FunctionComponent = () => {
     );
 
   return (
-    <p className="px-4 text-white text-center text-lg">
-      Complete the tasks to collect your reward
-    </p>
+    <div className="space-y-2">
+      <p className="px-4 text-white text-center sm:text-lg">
+        Welcome, crypto enthusiasts!
+      </p>
+      <p className="px-4 text-white text-center sm:text-lg">
+        Participate in our exciting airdrop tasks to earn free tokens! Follow the simple steps below to claim your rewards:
+      </p>
+    </div>
   );
 };
 
@@ -273,7 +281,7 @@ export default function Home() {
       <section>
         <Navbar />
       </section>
-      <section className="py-10">
+      <section className="pt-10 pb-3">
         <Heading />
       </section>
       <section className="py-4">
