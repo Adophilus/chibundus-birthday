@@ -11,9 +11,12 @@ const sendBirthdayMessage = async () => {
     await axios.post(
       env.DISCORD_SERVER_WEBHOOK_URL,
       {
+        content: "Happy Birthday! 🎉 Wishing you joy, laughter, and success in the year ahead. You're a shining star in my life, and I'm grateful for our friendship. Blow out the candles and make those wishes come true! 🎂🎈"
+      },
+      {
         headers: {
           Authorization: `Bot ${env.DISCORD_BEARER_TOKEN}`
-        }
+        },
       })
   } catch (err) {
     if (axios.isAxiosError(err)) {

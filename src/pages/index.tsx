@@ -4,6 +4,7 @@ import { api } from "~/utils/api";
 import DiscordIcon from "~/utils/icons/discord";
 import { Check, Lock, LogOut, XOctagon } from "lucide-react";
 import type { FunctionComponent } from "react";
+import { useState } from "react";
 import { useEffect, useRef } from "react";
 import MaticIcon from "~/utils/icons/matic";
 import { Disclosure, Transition } from "@headlessui/react";
@@ -11,9 +12,11 @@ import toast from "react-hot-toast";
 import { env } from "~/env.mjs";
 import useAppStore from "~/utils/store";
 import Head from "next/head";
+import LoadingSpinner from "~/utils/icons/loading-spinner";
 
 const Navbar: FunctionComponent = () => {
   const { data: sessionData } = useSession();
+  const store = useAppStore(store => store)
 
   if (sessionData?.user) {
     return (
@@ -21,9 +24,10 @@ const Navbar: FunctionComponent = () => {
         <Button
           variant="ghost"
           className="text-white rounded-none"
-          onClick={() => {
-            signOut()
-              .catch(err => console.warn("[signout]", err))
+          onClick={async () => {
+            store.updateHasJoinedDiscord(false)
+            store.updateHasSentFunds(false)
+            await signOut()
           }}
         >
           <LogOut className="w-6 h-6 mr-2" />
@@ -83,8 +87,8 @@ const DiscordServerTaskTab: FunctionComponent = () => {
         type="button"
         className="flex w-full justify-between items-center"
         onClick={() => {
-          window.open(env.NEXT_PUBLIC_DISCORD_SERVER_URL);
-          setTimeout(updateHasJoinedDiscord, 1000);
+          if (!store.hasJoinedDiscord)
+            window.open(env.NEXT_PUBLIC_DISCORD_SERVER_URL);
         }}
       >
         <span className="flex gap-x-2 items-center">
@@ -114,27 +118,56 @@ const DiscordServerTaskTab: FunctionComponent = () => {
 const PolygonWalletAddressTaskTab: FunctionComponent = () => {
   const { data: sessionData } = useSession();
   const isLoggedIn = sessionData?.user;
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const walletAddress = useRef<HTMLInputElement>(null);
   const store = useAppStore((store) => store);
 
   const { mutate: sendMaticMutation } = api.transfer.sendMatic.useMutation();
-  const sendMatic = (address: string) => {
+  const sendMatic = (recipientAddress: string) => {
+    setIsSubmitting(true)
     sendMaticMutation(
-      { recipientAddress: address },
+      { recipientAddress },
       {
         onError(err) {
+          console.warn(err)
           toast.error(err.message);
+          setIsSubmitting(false)
         },
         onSuccess(res) {
-          store.updateHasSentFunds(true);
-          toast.success(res.message);
+          console.log(res)
+          if (res.status) {
+            store.updateHasSentFunds(true);
+            toast.success(res.message);
+            setIsSubmitting(false)
+          }
+          else {
+            toast.error(res.message)
+            setIsSubmitting(false)
+          }
         },
       },
     );
   };
 
-  if (!isLoggedIn || !store.hasJoinedDiscord || store.hasSentFunds) return null;
+  if (store.hasSentFunds)
+    return (
+      <div className="flex w-full justify-between items-center border-y border-y-white">
+        <span className="flex gap-x-2 items-center">
+          <span className="flex bg-[#6F41D8] items-center justify-center w-14 h-14 self-stretch">
+            <MaticIcon className="w-8 h-8 fill-white stroke-white stroke-[0.5]" />
+          </span>
+          <span className="text-white font-semibold text-sm sm:text-lg">
+            Check your wallet 🌠
+          </span>
+        </span>
+        <span className="flex w-16 text-white font-semibold text-lg self-stretch items-center justify-center bg-teal-400">
+          <Check className="w-6 h-6 stroke-[3]" />
+        </span>
+      </div>
+    )
+
+  if (!isLoggedIn || !store.hasJoinedDiscord) return null;
 
   return (
     <div className="flex flex-col w-full border-y-white border-y">
@@ -190,13 +223,19 @@ const PolygonWalletAddressTaskTab: FunctionComponent = () => {
                           type="text"
                           placeholder="Polygon wallet address"
                           ref={walletAddress}
+                          disabled={isSubmitting}
                           className="grow rounded-l-md px-2 py-1 text-white font-robotoMono bg-transparent border-2 border-white border-r-0"
                         />
                         <button
-                          type="button"
-                          className="flex rounded-r-md text-white text-lg items-center justify-center px-2 hover:bg-white hover:text-black transition duration-300 ease-in-out border-2 border-white border-l-0"
+                          type="submit"
+                          disabled={isSubmitting}
+                          className={`flex rounded-r-md text-white text-lg items-center justify-center px-2 ${isSubmitting ? '' : 'hover:bg-white hover:text-black'} transition duration-300 ease-in-out border-2 border-white border-l-0`}
                         >
-                          <Check className="w-6 h-6 stroke-[3]" />
+                          {isSubmitting ? (
+                            <LoadingSpinner size="small" className="fill-white" />
+                          ) : (
+                            <Check className="w-6 h-6 stroke-[3]" />
+                          )}
                         </button>
                       </form>
                     </div>
@@ -223,6 +262,8 @@ const TasksTabs: FunctionComponent = () => {
 
 const Heading: FunctionComponent = () => {
   const { data: sessionData } = useSession();
+  const store = useAppStore(store => store)
+  console.log('store.hasJoinedDiscord:', store.hasJoinedDiscord)
 
   if (sessionData?.user) {
     return (
@@ -235,14 +276,21 @@ const Heading: FunctionComponent = () => {
   }
 
   return (
-    <header className="flex flex-col items-center gap-2">
-      <div>
-        <XOctagon className="w-24 h-24 text-white" />
-      </div>
-      <h2 className="font-roboto text-white text-4xl">
-        Verification Required!
-      </h2>
-    </header>
+    <>
+      <header className="flex justify-center">
+        <h1 className="text-3xl text-white font-press-start whitespace-nowrap">
+          NovaRetro
+        </h1>
+      </header>
+      <header className="flex flex-col items-center gap-2 mt-10">
+        <div>
+          <XOctagon className="w-24 h-24 text-white" />
+        </div>
+        <h2 className="font-roboto text-white text-4xl">
+          Verification Required!
+        </h2>
+      </header>
+    </>
   );
 };
 

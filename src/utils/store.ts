@@ -4,7 +4,7 @@ import { immer } from "zustand/middleware/immer"
 
 const useAppStore = create(
   devtools(
-    persist(
+    // persist(
       immer(
         combine({
           hasJoinedDiscord: false,
@@ -22,10 +22,10 @@ const useAppStore = create(
           }
         }))
       ),
-      {
-        name: "app_store"
-      }
-    )
+    //   {
+    //     name: "app_store"
+    //   }
+    // )
   )
 )
 
