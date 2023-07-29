@@ -164,7 +164,7 @@ const PolygonWalletAddressTaskTab: FunctionComponent = () => {
                 </span>
               </div>
             </Disclosure.Button>
-            {store.hasSentFunds
+            {!store.hasSentFunds
               ? (
                 <Transition
                   show={open}
