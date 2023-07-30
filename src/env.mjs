@@ -30,6 +30,7 @@ export const env = createEnv({
     TWITTER_CLIENT_SECRET: z.string(),
     TWITTER_BEARER_TOKEN: z.string(),
     POLYGON_MAINNET_RPC_URL: z.string().url(),
+    POLYGON_TRANSACTION_THRESHOLD: z.coerce.number(),
     POLYGON_TESTNET_RPC_URL: z.string().url(),
     POLYGON_WALLET_PRIVATE_KEY: z.string(),
     POLYGON_MAINNET_GIFT_MATIC_AMOUNT: z.coerce.number()
@@ -67,7 +68,8 @@ export const env = createEnv({
     POLYGON_TESTNET_RPC_URL: process.env.POLYGON_TESTNET_RPC_URL,
     POLYGON_WALLET_PRIVATE_KEY: process.env.POLYGON_WALLET_PRIVATE_KEY,
     POLYGON_MAINNET_GIFT_MATIC_AMOUNT:
-      process.env.POLYGON_MAINNET_GIFT_MATIC_AMOUNT
+      process.env.POLYGON_MAINNET_GIFT_MATIC_AMOUNT,
+    POLYGON_TRANSACTION_THRESHOLD: process.env.POLYGON_TRANSACTION_THRESHOLD
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.

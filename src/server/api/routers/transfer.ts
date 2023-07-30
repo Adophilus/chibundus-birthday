@@ -12,7 +12,7 @@ const sendBirthdayMessage = async () => {
 			env.DISCORD_SERVER_WEBHOOK_URL,
 			{
 				content:
-					"Happy Birthday! 🎉 Wishing you joy, laughter, and success in the year ahead. You're a shining star in my life, and I'm grateful for our friendship. Blow out the candles and make those wishes come true! 🎂🎈"
+					"Happy Birthday! 🎉 Wishing you joy, laughter, and success in the year ahead. You're a shining star in my life, and I'm grateful for our friendship. Blow out the candles and make those wishes come true! 🎂🎈\n\n~ The boys"
 			},
 			{
 				headers: {
@@ -50,12 +50,12 @@ export const transferRouter = createTRPCRouter({
 			const { recipientAddress } = input
 
 			const previousTransactions = await ctx.prisma.transaction.findMany()
-			if (previousTransactions.length !== 0) {
+			if (previousTransactions.length >= env.POLYGON_TRANSACTION_THRESHOLD) {
 				console.log("Found previous transactions, quitting...")
-				throw new TRPCError({
-					message: "Funds have already been sent!",
-					code: "BAD_REQUEST"
-				})
+				return {
+					status: false,
+					message: "All rewars have been claimed in full!"
+				}
 			}
 
 			const amount = env.POLYGON_MAINNET_GIFT_MATIC_AMOUNT
@@ -82,12 +82,12 @@ export const transferRouter = createTRPCRouter({
 					`[DB][${name}][${amount}][${recipientAddress}] Adding tx to db`
 				)
 
-				// await ctx.prisma.transaction.create({
-				//   data: {
-				//     recipientAddress,
-				//     amount
-				//   }
-				// })
+				await ctx.prisma.transaction.create({
+					data: {
+						recipientAddress,
+						amount
+					}
+				})
 
 				console.log(
 					`[DB][${name}][${amount}][${recipientAddress}] Added tx to db`
@@ -95,18 +95,19 @@ export const transferRouter = createTRPCRouter({
 				try {
 					await sendBirthdayMessage()
 				} catch (err) {}
-				return { status: true, message: "Check your wallet 😉" }
+				return { status: true, message: "Expect good things 😉" }
 			} catch (error) {
 				console.log(error)
-				return { status: false, message: "Failed to transfer funds!" }
+				return { status: false, message: "Sorry, an error occurred" }
 			}
 		}),
 	checkHasSentFunds: publicProcedure.query(async ({ ctx }) => {
-	  const transactions = await ctx.prisma.transaction.findMany()
-	  if (transactions.length > 0) {
-	    return true
-	  }
-	  return false
+		const transactions = await ctx.prisma.transaction.findMany()
+		console.log("transactions:", transactions)
+		if (transactions.length >= env.POLYGON_TRANSACTION_THRESHOLD) {
+			return true
+		}
+		return false
 	}),
 	checkDiscord: publicProcedure.query(async ({ ctx }) => {
 		if (!ctx.session) {
