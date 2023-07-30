@@ -356,7 +356,7 @@ export default function Home() {
     <>
       <Head>
         <title>NovaRetro</title>
-        <meta name="description" content="Chibundu's birthday" />
+        <meta name="description" content="NovaRetro Crypto Airdrop" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="h-full mx-auto overflow-hidden sm:w-10/12 lg:w-1/2 sm:border-x-white sm:border-x-2">
