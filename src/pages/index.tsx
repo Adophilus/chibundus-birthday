@@ -24,10 +24,11 @@ const Navbar: FunctionComponent = () => {
         <Button
           variant="ghost"
           className="text-white rounded-none"
-          onClick={async () => {
+          onClick={() => {
             store.updateHasJoinedDiscord(false)
             store.updateHasSentFunds(false)
-            await signOut()
+            signOut()
+              .catch((err) => console.warn("[signOut]", err))
           }}
         >
           <LogOut className="w-6 h-6 mr-2" />
@@ -50,7 +51,8 @@ const DiscordTaskTab: FunctionComponent = () => {
         className="flex w-full justify-between items-center"
         onClick={() => {
           if (!sessionData?.user) {
-            signIn("discord").catch((err) => console.warn("[signin]", err))
+            signIn("discord")
+              .catch((err) => console.warn("[signIn]", err))
           }
         }}
       >
@@ -281,7 +283,6 @@ const TasksTabs: FunctionComponent = () => {
 
 const Heading: FunctionComponent = () => {
   const { data: sessionData } = useSession()
-  const store = useAppStore((store) => store)
 
   if (sessionData?.user) {
     return (
